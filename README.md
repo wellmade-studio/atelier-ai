@@ -21,14 +21,54 @@ pieces — each one earns its keep on its own.
 
 ## What's here today
 
-- **[`skills/configure-project`](./skills/configure-project)** — detects
-  the project stack (NestJS API, Vite-React frontend, plain Node, etc.)
-  and wires up `@wellmade/eslint-config`, `@wellmade/prettier-config`,
-  `@wellmade/stylelint-config`, and (when published) `@wellmade/tsconfig`
-  end-to-end. The thing you reach for on a fresh service.
+- **[`skills/wire-project`](./skills/wire-project)** — top-level "make
+  this project Wellmade-ready" skill. Detects services
+  (`package.json#workspaces` if declared, else `services/* apps/*
+  packages/*`), runs `configure-project` on each, drops the AGENTS.md
+  template, optionally installs the lint-on-edit hook. The thing you
+  reach for on a fresh clone.
+- **[`skills/configure-project`](./skills/configure-project)** —
+  per-service configurator. Detects the stack (NestJS, Vite, Astro,
+  Vite-React, Next.js, plain Node/TS) and wires the `@wellmade/*`
+  configs end-to-end. Called by `wire-project` per service; can also
+  be used standalone.
+- **[`templates/AGENTS.md`](./templates/AGENTS.md)** — the Wellmade
+  conventions in a portable file. Wrapped in marker comments so
+  `atelier-ai` can update it in place without clobbering project-specific
+  content the user added.
+- **[`hooks/lint-on-edit.sh`](./hooks/lint-on-edit.sh)** — `PostToolUse`
+  hook that runs `eslint --fix` + `prettier --write` on the changed
+  file after every `Edit`/`Write`/`MultiEdit`. Surfaces remaining
+  errors to the agent without blocking the tool call.
 
 More to come. Each piece ships when there's a real need for it — not
 before.
+
+### Wiring the hook (per agent)
+
+The hook script is portable; the *wiring* depends on which agent you
+use. `wire-project` does this for Claude Code automatically. For
+others:
+
+**Claude Code** — add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "$HOME/.claude/hooks/lint-on-edit.sh" }]
+      }
+    ]
+  }
+}
+```
+
+**Cursor / Continue / other agents** — consult your agent's hook
+documentation. The script reads the tool-call JSON on stdin and looks
+for `.tool_input.file_path`; override with `ATELIER_AI_FILE_PATH_JQ` if
+your agent uses a different field.
 
 ## Install
 

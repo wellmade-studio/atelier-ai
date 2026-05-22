@@ -47,10 +47,31 @@ If it's a **lint rule, format rule, or TS config** that runs at
 dev/CI time → `standards-js/`. It ships to npm, customers install it.
 
 If it's **AI-facing tooling** (a skill, an agent, a template that
-tells Claude how to work in a Wellmade project) → here.
+tells the agent how to work in a Wellmade project) → here.
 
 If you're not sure, ask: *does the customer's CI need this?* If yes,
-it's `standards-js`. If only Claude Code needs it, it's `atelier-ai`.
+it's `standards-js`. If only the agent needs it, it's `atelier-ai`.
+
+## What goes in `atelier-ai/` vs the future `@wellmade/cli`
+
+This is the trickier seam. The factoring:
+
+- **Mechanical wiring** (detect stack, install packages, write files,
+  run typecheck/lint/format) → **CLI**. No judgment required, runnable
+  from CI, useful even without an agent in the loop.
+- **Agent-facing context** (skill descriptions, hooks, AGENTS.md
+  templates) → **atelier-ai**. Only meaningful inside an agent session.
+- **Orchestrators** (`configure-project`, `wire-project`) live here
+  **today** with embedded scripts (`configure.mjs`, `wire.mjs`)
+  because the CLI doesn't exist yet. The scripts are written so the
+  logic can migrate cleanly into `wm configure` / `wm wire` when the
+  CLI ships, leaving thin SKILL.md wrappers behind that say "run `wm
+  <command>`."
+
+Rule of thumb: if a script's body would work unchanged as a CLI
+subcommand body, it's CLI work temporarily living here. Don't add
+agent-only assumptions (no prompting beyond what `--yes` controls, no
+calls back into the agent) — those would prevent the migration.
 
 ## Adding a skill
 
