@@ -42,8 +42,19 @@ to the step-by-step playbook when the project needs surgery
 node /path/to/atelier-ai/skills/configure-project/configure.mjs
 ```
 
-The script accepts `--dry-run` (preview only), `--yes` (skip confirmation),
-and `--stack=<name>` (override detection).
+Flags:
+
+- `--dry-run` — preview only, no writes.
+- `--yes` — skip the confirmation prompts. Conflicts still get backed
+  up (no silent clobbering).
+- `--stack=<name>` — override detection.
+- `--with-hooks` — also install `@wellmade/commitlint-config` +
+  `lint-staged` + `husky` and wire them into `package.json`. **Off by
+  default** — the summary tells you it was skipped and how to re-run.
+- `--verify=<mode>` — `full` (default) runs `typecheck`/`lint`/
+  `format:check` on the whole repo. `smoke` runs each tool on a probe
+  file to confirm wiring without surfacing every brownfield violation.
+  `none` skips verification.
 
 ---
 
@@ -94,14 +105,27 @@ Print:
 Detected: <stack>
 Will install: @wellmade/eslint-config, @wellmade/prettier-config, …
 Will write/modify: eslint.config.js, package.json (prettier + scripts), tsconfig.json
-Existing files that conflict: <list>  ← ask before overwriting
+File conflicts (will back up to .bak): <list>
+Inline conflicts (will overwrite — no backup possible): <list>
 Proceed?
 ```
 
-If a conflict file exists (`.eslintrc.*`, `.prettierrc*`, `tsconfig.json`
-that doesn't extend a `@wellmade/*` base), **stop and ask** whether to:
-(a) back it up (`.eslintrc.json.bak`) and replace, (b) merge in place, or
-(c) abort. Default to (c) — surprise replacements destroy trust.
+Conflict types:
+
+- **File conflicts** — real files that would shadow or clash with what
+  we write. Include all of: `.eslintrc.*`, `eslint.config.{cjs,mjs,ts}`
+  siblings, every `.prettierrc*` / `prettier.config.*` variant, and
+  `tsconfig.json` that doesn't extend a `@wellmade/*` base. **Always
+  backed up to `.bak`** before our write wins (or `.bak2` / `.bakN` if
+  `.bak` already exists). This happens even under `--yes`.
+- **Inline conflicts** — values *inside* `package.json` (notably
+  `#prettier`). Can't be backed up — we overwrite and report. Under
+  interactive mode the user can abort; under `--yes` they proceed.
+
+**Source-of-truth decision**: `package.json#prettier` always wins. Any
+sibling `.prettierrc*` or `prettier.config.*` is backed up. This
+matches the rest of the skill's behavior (configs in `package.json`
+where possible).
 
 ### Step 3 — Install packages
 
@@ -294,12 +318,28 @@ can compare.
 
 ### Step 6 — Verify
 
-Run, in order, and stop on the first failure:
+Two verification modes, picked via `--verify=<mode>`:
+
+**`--verify=full` (default)** — run on the whole repo, in order:
 
 1. `npm run typecheck`
 2. `npm run lint`
 3. `npm run format:check`
 4. `npm run stylelint` *(if applicable)*
+
+Stops on the first failure. Useful for *greenfield* projects. On
+brownfield repos the strict TS config + new lint rules will almost
+always trip something — that doesn't mean the wiring is broken.
+
+**`--verify=smoke`** — confirm tool *wiring* without surfacing every
+existing violation. Writes a temp `.ts` probe file, runs ESLint and
+Prettier against it, runs `tsc --noEmit`. Each tool is considered "OK"
+if it ran without a config error, even if it reported lint or type
+violations. Useful for adopting Wellmade on an existing codebase: you
+want to know "is the toolchain installed correctly?" first, "does
+existing code comply?" later.
+
+**`--verify=none`** — skip verification entirely.
 
 **On failure, do not auto-fix.** Report the error count and the first
 few lines of output, and ask the user whether to run `lint:fix` /
@@ -308,20 +348,24 @@ codebase can produce a giant diff the user didn't expect.
 
 ### Step 7 — Report what changed
 
-Print a summary:
+Print a structured summary covering:
 
-```
-✓ Installed 4 packages
-✓ Wrote eslint.config.js
-✓ Updated package.json (prettier field + 5 scripts)
-✓ Wrote tsconfig.json
-✓ Verification passed (typecheck, lint, format)
-Backed up: .eslintrc.json → .eslintrc.json.bak
-```
+- Stack, package count, files backed up, values overwritten
+- Preserved-but-not-replaced scripts (so the user can audit them)
+- Workspace-root detection (when running inside a monorepo sub-package)
+- Whether hooks were installed (and how to add them if not)
+- NestJS + `verbatimModuleSyntax` warning (when applicable)
+- Verification result, including the mode used
+
+If anything **notable** happened (a backup, a preserved script, a
+verification failure, an unexpected workspace root), the script also
+prints a *feedback block* directed at agent runners: "this run hit a
+few situations the skill owner would want to know about" with a link
+to file feedback. The block is suppressed on uneventful runs so the
+skill doesn't spam noise.
 
 Then suggest the obvious follow-ups: commit the changes, set up editor
-integration (link to standards-js README for VS Code/JetBrains), enable
-pre-commit hooks if not already done.
+integration (link to standards-js README for VS Code/JetBrains).
 
 ---
 
@@ -335,6 +379,17 @@ pre-commit hooks if not already done.
 - Nest's generated `eslint.config.mjs` (Nest 10+) can be replaced
   outright — it's a sensible default we're replacing with a stricter one.
 - Keep `nest-cli.json` and `tsconfig.build.json` untouched.
+- **Heads up: `verbatimModuleSyntax`.** `@wellmade/tsconfig/node.json`
+  enables it. Nest's `nest new` scaffold doesn't set `"type": "module"`
+  in `package.json`, which is the biggest source of friction on this
+  stack. If a user hits `Cannot use import statement outside a module`,
+  either:
+  - add `"type": "module"` to `package.json` (cleanest, modern Nest
+    supports ESM), or
+  - override `compilerOptions.verbatimModuleSyntax: false` in
+    `tsconfig.json` (lower-effort, retains CJS).
+  The skill surfaces this as a plan note when it detects a NestJS
+  project without `"type": "module"`.
 
 ### Vite + React
 
