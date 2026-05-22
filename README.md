@@ -32,6 +32,15 @@ pieces — each one earns its keep on its own.
   Vite-React, Next.js, plain Node/TS) and wires the `@wellmade/*`
   configs end-to-end. Called by `wire-project` per service; can also
   be used standalone.
+- **[`skills/relax-rule`](./skills/relax-rule)** — record a deliberate
+  relaxation of a Wellmade rule in `.wellmade/relaxations.md`. Stops
+  brownfield adoption from accumulating invisible tech debt: every
+  relaxation gets a `why` and a `revisit-when`. Always reports register
+  state on every run.
+- **[`skills/audit-relaxations`](./skills/audit-relaxations)** —
+  periodic check on the register. Detects drift (rules relaxed in
+  configs but not tracked), flags overdue entries, optionally re-runs
+  each rule to compute violation-count trajectories. CI-friendly.
 - **[`templates/AGENTS.md`](./templates/AGENTS.md)** — the Wellmade
   conventions in a portable file. Wrapped in marker comments so
   `atelier-ai` can update it in place without clobbering project-specific

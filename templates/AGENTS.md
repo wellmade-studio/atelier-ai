@@ -55,6 +55,28 @@ apply — use the native versions but be aware of their quirks.
 - **No mocked databases in integration tests.** Mock-passing prod-failing
   tests are worse than no tests.
 
+## Relaxing a Wellmade rule
+
+Sometimes a Wellmade lint, TypeScript, or Prettier rule isn't
+sustainable on this project *right now* (typical on brownfield
+adoption). That's allowed — but a silent disable becomes a permanent
+regression nobody remembers to fix.
+
+**Don't edit `eslint.config.js` / `tsconfig.json` directly to disable a
+Wellmade rule.** Use the [`relax-rule`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/relax-rule)
+skill instead. It records the relaxation in `.wellmade/relaxations.md`
+with a `why` and a `revisit-when`, so the debt is tracked and revisitable.
+
+```bash
+# Example: disable no-explicit-any with a documented reason
+relax-rule no-explicit-any \
+  --why "143 usages in services/api need Mongoose typing first" \
+  --revisit-when "after migration to @wellmade/bedrock parsers"
+```
+
+For inline single-line disables (`// eslint-disable-next-line foo`),
+no register entry is needed — those don't shift the baseline.
+
 ## Commits and PRs
 
 - **Conventional Commits**: `feat:`, `fix:`, `chore:`, `docs:`,
