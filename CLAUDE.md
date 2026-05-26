@@ -29,8 +29,10 @@ the first question.
   (markdown + frontmatter, `AGENTS.md`-style context, hook scripts).
   Don't hard-code paths or tool names unique to one vendor's CLI when a
   generic form works.
-- **Brand-neutral.** No prior-employer brand names ([REDACTED], [REDACTED], [REDACTED],
-  [REDACTED], `[REDACTED]`). Wellmade's own brand is fine and expected.
+- **Brand-neutral.** No prior-employer, prior-source, or prior-codebase
+  brand names anywhere in source, READMEs, or commit messages. Wellmade's
+  own brand is fine and expected. The full deny-list lives in a private
+  workspace note — don't enumerate it here.
 - **MIT-licensed**, copyright Wellmade.
 - **Voice** matches Wellmade's: anti-hype, conversational, plain English.
   Skills and agents talk to the user the same way the rest of the
