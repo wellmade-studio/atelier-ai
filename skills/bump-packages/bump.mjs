@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// update-wellmade: bump every @wellmade/* package across a project
+// bump-packages: bump every @wellmade/* package across a project
 // (or monorepo) to the latest published versions in lockstep.
 //
-// Discovery: same as wire-project — package.json#workspaces, then
+// Discovery: same as setup-project — package.json#workspaces, then
 // services/*/apps/*/packages/*, then single-repo.
 //
 // Lockstep: every workspace gets the same latest version per package.
@@ -202,7 +202,7 @@ async function main() {
 
   if (plan.length === 0) {
     console.log('No @wellmade/* packages found in any workspace. Nothing to update.');
-    console.log('If this is unexpected, run `wire-project` first to install the toolchain.');
+    console.log('If this is unexpected, run `setup-project` first to install the toolchain.');
     return;
   }
 

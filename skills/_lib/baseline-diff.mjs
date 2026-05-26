@@ -236,7 +236,7 @@ export function detectPrettierDeviations(projectRoot) {
 //
 // "Should this project have @wellmade/X installed?" The honest answer
 // depends on the stack. Rather than hardcode per-stack expectations
-// (which duplicates configure-project's detection), we infer:
+// (which duplicates configure-service's detection), we infer:
 //
 //   - Any @wellmade/* package already in dependencies/devDependencies
 //     is the "the project opted in to this baseline." Compare against

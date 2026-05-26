@@ -61,8 +61,8 @@ This is the trickier seam. The factoring:
   from CI, useful even without an agent in the loop.
 - **Agent-facing context** (skill descriptions, hooks, AGENTS.md
   templates) → **atelier-ai**. Only meaningful inside an agent session.
-- **Orchestrators** (`configure-project`, `wire-project`) live here
-  **today** with embedded scripts (`configure.mjs`, `wire.mjs`)
+- **Orchestrators** (`configure-service`, `setup-project`, `bump-packages`) live here
+  **today** with embedded scripts (`configure.mjs`, `setup.mjs`, `bump.mjs`)
   because the CLI doesn't exist yet. The scripts are written so the
   logic can migrate cleanly into `wm configure` / `wm wire` when the
   CLI ships, leaving thin SKILL.md wrappers behind that say "run `wm

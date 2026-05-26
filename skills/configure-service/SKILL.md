@@ -1,10 +1,10 @@
 ---
-name: configure-project
-description: Configure a Wellmade project — detect the stack (NestJS, Vite-React, Next, Astro, plain Node, monorepo), install and wire the @wellmade/* configs (eslint, prettier, stylelint, tsconfig, commitlint, lint-staged), update package.json scripts, run a verification pass. Use when the user asks to "set up wellmade", "configure standards", "add lint/format", "wire up the toolchain", or starts a fresh service that needs the conventions applied.
+name: configure-service
+description: Configure one Wellmade service — detect the stack (NestJS, Vite-React, Next, Astro, plain Node, monorepo root), install and wire the @wellmade/* configs (eslint, prettier, stylelint, tsconfig, commitlint, lint-staged), update package.json scripts, run a verification pass. Use when the user asks to "configure this service", "add wellmade to this package", or has one package they want configured (not a whole monorepo — that's setup-project).
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
-# configure-project
+# configure-service
 
 Wires the `@wellmade/*` lint, format, and TypeScript configs into a
 project end-to-end. Designed for fresh services (NestJS API, Vite-React
@@ -26,8 +26,10 @@ toolchain yet.
   skill would install — fall through to a no-op and tell the user.
 - The user wants to write a new lint *rule* — that's a `standards-js/`
   contribution, not a project configuration.
-- The user wants to upgrade an existing setup — that's a separate
-  `upgrade-wellmade` skill (not built yet).
+- The user wants to bump `@wellmade/*` packages on an existing setup —
+  use `bump-packages` instead.
+- The user has a whole monorepo to configure — use `setup-project`
+  (which calls this skill per service).
 
 ## The fast path
 
@@ -39,7 +41,7 @@ to the step-by-step playbook when the project needs surgery
 (monorepo root, conflicting configs, partial install, etc.).
 
 ```bash
-node /path/to/atelier-ai/skills/configure-project/configure.mjs
+node /path/to/atelier-ai/skills/configure-service/configure.mjs
 ```
 
 Flags:

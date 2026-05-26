@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// wire-project: bring a project (single repo or monorepo) up to the
+// setup-project: bring a project (single repo or monorepo) up to the
 // Wellmade standard in one shot.
 //
 //   1. Discover services (workspaces if declared, else services/apps/packages)
-//   2. Run configure-project on each
+//   2. Run configure-service on each
 //   3. Drop / merge the AGENTS.md template
 //   4. Offer to install the lint-on-edit hook
 //
@@ -29,7 +29,7 @@ const SERVICES_OVERRIDE = argv.find((a) => a.startsWith('--services='))?.split('
 const cwd = process.cwd();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ATELIER_ROOT = resolve(__dirname, '..', '..');
-const CONFIGURE_SCRIPT = join(ATELIER_ROOT, 'skills', 'configure-project', 'configure.mjs');
+const CONFIGURE_SCRIPT = join(ATELIER_ROOT, 'skills', 'configure-service', 'configure.mjs');
 const AGENTS_TEMPLATE = join(ATELIER_ROOT, 'templates', 'AGENTS.md');
 const HOOK_SCRIPT = join(ATELIER_ROOT, 'hooks', 'lint-on-edit.sh');
 
@@ -199,7 +199,7 @@ async function main() {
     }
     console.log(`\n=== Configuring ${service} ===`);
     if (DRY_RUN) {
-      console.log(`  (dry-run) would invoke configure-project`);
+      console.log(`  (dry-run) would invoke configure-service`);
       continue;
     }
     const args = ['--yes'];
@@ -208,7 +208,7 @@ async function main() {
       stdio: 'inherit',
     });
     if (result.status !== 0) {
-      console.error(`  ✗ configure-project failed in ${service}`);
+      console.error(`  ✗ configure-service failed in ${service}`);
       process.exit(3);
     }
   }
@@ -260,7 +260,7 @@ function printToolkitFooter() {
   console.log('                         or skip a @wellmade/* package. Each entry gets a why + revisit-when.');
   console.log('  • audit-deviations   — periodic check on the register: tracked entries, untracked drift,');
   console.log('                         overdue items, ESLint rule trajectories. CI-friendly with --ci.');
-  console.log('  • update-wellmade    — bump every @wellmade/* package in lockstep across the monorepo;');
+  console.log('  • bump-packages    — bump every @wellmade/* package in lockstep across the monorepo;');
   console.log('                         re-runs audit-deviations so resolvable entries surface.');
   console.log('───────────────────────────────────────────');
 }

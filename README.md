@@ -21,16 +21,16 @@ pieces — each one earns its keep on its own.
 
 ## What's here today
 
-- **[`skills/wire-project`](./skills/wire-project)** — top-level "make
+- **[`skills/setup-project`](./skills/setup-project)** — top-level "make
   this project Wellmade-ready" skill. Detects services
   (`package.json#workspaces` if declared, else `services/* apps/*
-  packages/*`), runs `configure-project` on each, drops the AGENTS.md
+  packages/*`), runs `configure-service` on each, drops the AGENTS.md
   template, optionally installs the lint-on-edit hook. The thing you
   reach for on a fresh clone.
-- **[`skills/configure-project`](./skills/configure-project)** —
+- **[`skills/configure-service`](./skills/configure-service)** —
   per-service configurator. Detects the stack (NestJS, Vite, Astro,
   Vite-React, Next.js, plain Node/TS) and wires the `@wellmade/*`
-  configs end-to-end. Called by `wire-project` per service; can also
+  configs end-to-end. Called by `setup-project` per service; can also
   be used standalone.
 - **[`skills/record-deviation`](./skills/record-deviation)** — record a
   deliberate departure from a Wellmade baseline in
@@ -44,7 +44,7 @@ pieces — each one earns its keep on its own.
   tsconfig, prettier, package), flags overdue entries, optionally
   re-runs each ESLint rule to compute violation-count trajectories.
   CI-friendly with `--ci`.
-- **[`skills/update-wellmade`](./skills/update-wellmade)** — bump every
+- **[`skills/bump-packages`](./skills/bump-packages)** — bump every
   `@wellmade/*` package across a project (or monorepo) to the latest
   versions in lockstep. Pairs with `audit-deviations`: a `standards-js`
   release that widens a peer-dep range may now allow a previously-skipped
@@ -65,24 +65,24 @@ before.
 
 | If you want to…                                                            | Use                  |
 | -------------------------------------------------------------------------- | -------------------- |
-| Set up Wellmade on a fresh clone (single repo or monorepo)                 | `wire-project`       |
-| Set up Wellmade on one service that doesn't have it yet                    | `configure-project`  |
+| Set up Wellmade on a fresh clone (single repo or monorepo)                 | `setup-project`       |
+| Set up Wellmade on one service that doesn't have it yet                    | `configure-service`  |
 | Disable a Wellmade rule, flip a tsconfig flag, or skip a `@wellmade/*` pkg | `record-deviation`   |
 | See what deviations are tracked + find untracked drift                     | `audit-deviations`   |
-| Bump every `@wellmade/*` package to latest in lockstep                     | `update-wellmade`    |
+| Bump every `@wellmade/*` package to latest in lockstep                     | `bump-packages`    |
 | Get inline lint/format on every file the agent edits                       | `hooks/lint-on-edit` |
-| Drop the Wellmade conventions into a project's `AGENTS.md`                 | `templates/AGENTS.md` (auto, via `wire-project`) |
+| Drop the Wellmade conventions into a project's `AGENTS.md`                 | `templates/AGENTS.md` (auto, via `setup-project`) |
 
 How they fit together:
 
 ```
-wire-project ──────────→ configure-project (per service)
+setup-project ──────────→ configure-service (per service)
                     └──→ AGENTS.md template
                     └──→ lint-on-edit hook (optional)
 
 day-to-day:    record-deviation ←→ audit-deviations
                                           ↑
-                                  update-wellmade
+                                  bump-packages
                           (re-runs audit afterward to
                            surface resolvable entries)
 ```
@@ -90,7 +90,7 @@ day-to-day:    record-deviation ←→ audit-deviations
 ### Wiring the hook (per agent)
 
 The hook script is portable; the *wiring* depends on which agent you
-use. `wire-project` does this for Claude Code automatically. For
+use. `setup-project` does this for Claude Code automatically. For
 others:
 
 **Claude Code** — add to `~/.claude/settings.json`:
@@ -120,7 +120,7 @@ Three ways, pick the one that fits your setup.
 ### 1. Single skill via [skills.sh](https://skills.sh) (recommended for one-offs)
 
 ```bash
-npx skills add wellmade-studio/atelier-ai/skills/configure-project
+npx skills add wellmade-studio/atelier-ai/skills/configure-service
 ```
 
 The skills.sh CLI accepts a subpath. Substitute any skill name to
@@ -167,14 +167,14 @@ git clone https://github.com/wellmade-studio/atelier-ai.git ~/.atelier-ai
 
 ```bash
 git clone https://github.com/wellmade-studio/atelier-ai.git ~/.atelier-ai
-ln -s ~/.atelier-ai/skills/configure-project ~/.claude/skills/configure-project
+ln -s ~/.atelier-ai/skills/configure-service ~/.claude/skills/configure-service
 ```
 
 Useful when you want a specific subset and prefer to wire it yourself.
 
 ## Sibling repos
 
-- [`wellmade-studio/standards-js`](https://github.com/wellmade-studio/standards-js) — the lint/format/TS configs `configure-project` installs.
+- [`wellmade-studio/standards-js`](https://github.com/wellmade-studio/standards-js) — the lint/format/TS configs `configure-service` installs.
 - [`wellmade-studio/bedrock-js`](https://github.com/wellmade-studio/bedrock-js) — the runtime library standards-js's opt-in `bedrockPreset` points at.
 
 ## License

@@ -1,17 +1,17 @@
 ---
-name: update-wellmade
-description: Bump all @wellmade/* packages across a project (or monorepo) to the latest published versions in lockstep. Detects per-service and root-level @wellmade/* deps, surfaces what would change, optionally runs npm install + audit-deviations after to see if any tracked deviations are now resolvable. Use periodically (monthly, before a release) or whenever a customer reports that a new @wellmade/* version landed.
+name: bump-packages
+description: Bump every @wellmade/* package across a project (or monorepo) to the latest published versions in lockstep. Detects per-service and root-level @wellmade/* deps, surfaces what would change, optionally runs npm install + audit-deviations after to see if any tracked deviations are now resolvable. Use periodically (monthly, before a release) or whenever a customer reports that a new @wellmade/* version landed.
 allowed-tools: Read, Bash, Glob, Grep
 ---
 
-# update-wellmade
+# bump-packages
 
-Companion to `configure-project` and `wire-project`. Those skills get
+Companion to `configure-service` and `setup-project`. Those skills get
 Wellmade onto a project; this one keeps it current.
 
 The mechanics — find every `@wellmade/*` dep, look up the latest
 version, bump in lockstep, run install — are the kind of thing the
-future `@wellmade/cli` will own as `wm update`. For now this skill
+future `@wellmade/cli` will own as `wm bump`. For now this skill
 embeds the logic so customers don't have to write the same loop by
 hand on every monorepo.
 
@@ -28,7 +28,7 @@ hand on every monorepo.
 ## When NOT to use this skill
 
 - On a project that doesn't have any `@wellmade/*` packages yet —
-  start with `wire-project` instead.
+  start with `setup-project` instead.
 - For a one-off update of a single package — `npm install --save-dev
   @wellmade/<x>@latest` is simpler. This skill is for the *cross-service
   lockstep* case.
@@ -36,7 +36,7 @@ hand on every monorepo.
 ## The fast path
 
 ```bash
-node /path/to/atelier-ai/skills/update-wellmade/update.mjs
+node /path/to/atelier-ai/skills/bump-packages/bump.mjs
 ```
 
 Flags:
@@ -55,7 +55,7 @@ Flags:
 Walks the project for `package.json` files (using
 `package.json#workspaces` if declared, else `services/*`, `apps/*`,
 `packages/*`, else the repo root as a single package — same discovery
-order as `wire-project`).
+order as `setup-project`).
 
 For each `package.json`, extracts every `@wellmade/*` package from
 `dependencies` and `devDependencies` with its current version range.
@@ -87,7 +87,7 @@ Root
 Unless `--yes`, asks before running. On confirm, runs
 `npm install --save-dev @wellmade/foo@^X @wellmade/bar@^Y ...` *per
 workspace*. In an npm-workspaces monorepo, the lockfile updates at
-the root automatically (same caveat as `configure-project` Step 5
+the root automatically (same caveat as `configure-service` Step 5
 calls out).
 
 ### Step 5 — Post-update audit (optional)
@@ -115,9 +115,9 @@ Unless `--skip-audit`, runs `audit-deviations` afterward. Surfaces:
 
 ## Future: the wm CLI
 
-Like `configure-project` and `wire-project`, this skill's body is
+Like `configure-service` and `setup-project`, this skill's body is
 embedded `.mjs` today. When `@wellmade/cli` ships, the logic moves
-into `wm update`, and this SKILL.md becomes a thinner wrapper that
+into `wm bump`, and this SKILL.md becomes a thinner wrapper that
 tells the agent to invoke the CLI. The judgment layer (when to use,
 when not to) stays here.
 

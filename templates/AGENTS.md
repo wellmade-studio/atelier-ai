@@ -95,7 +95,7 @@ removed, or whether the project has drifted (deviations in the configs
 that aren't in the register).
 
 After a `standards-js` release widens a peer-dep range, run
-[`update-wellmade`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/update-wellmade)
+[`bump-packages`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/bump-packages)
 to bump all `@wellmade/*` packages across the monorepo in lockstep —
 it also re-runs the audit afterward to surface package deviations
 that may now be resolvable.

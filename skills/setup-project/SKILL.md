@@ -1,22 +1,22 @@
 ---
-name: wire-project
-description: Wire a project (single repo or monorepo) for the full Wellmade workflow — runs configure-project on each service, drops the AGENTS.md template, installs the lint-on-edit hook. Use when the user asks to "wire up wellmade", "set up the whole project", "make this monorepo wellmade-ready", or has just cloned a project and wants the toolchain applied across all services at once.
+name: setup-project
+description: Set up a project (single repo or monorepo) for the full Wellmade workflow — runs configure-service on each service, drops the AGENTS.md template, installs the lint-on-edit hook. Use when the user asks to "set up wellmade", "set up the project", "make this monorepo wellmade-ready", or has just cloned a project and wants the toolchain applied across all services at once.
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
-# wire-project
+# setup-project
 
 Top-level "make this project Wellmade-ready" skill. Calls
-[`configure-project`](../configure-project) per service, drops the
+[`configure-service`](../configure-service) per service, drops the
 AGENTS.md template, installs the lint-on-edit hook into the agent's
 config.
 
-The fast path is [`wire.mjs`](./wire.mjs) — runs the whole sequence
+The fast path is [`setup.mjs`](./setup.mjs) — runs the whole sequence
 with one command. Fall back to the playbook below for surgery.
 
 ## When to use this skill
 
-- User says "wire up wellmade", "set up the project", "make this
+- User says "set up wellmade", "set up the project", "make this
   monorepo wellmade-ready".
 - Fresh clone of a customer project where nothing has been configured yet.
 - New `services/<name>/` folder added and the user wants it brought up
@@ -24,14 +24,14 @@ with one command. Fall back to the playbook below for surgery.
 
 ## When NOT to use this skill
 
-- Just one service to configure — use [`configure-project`](../configure-project) directly.
+- Just one service to configure — use [`configure-service`](../configure-service) directly.
 - The project is already wired and you just want to *update* the
-  configs — that's `upgrade-wellmade` (not built yet).
+  configs — that's `bump-packages` (separate skill, periodic maintenance).
 
 ## The fast path
 
 ```bash
-node /path/to/atelier-ai/skills/wire-project/wire.mjs
+node /path/to/atelier-ai/skills/setup-project/setup.mjs
 ```
 
 Accepts `--dry-run`, `--yes`, `--skip-hook`, `--skip-template`,
@@ -57,7 +57,7 @@ regret — show the list, take consent.
 
 ### Step 2 — Configure each service
 
-For each discovered service, run the `configure-project` logic
+For each discovered service, run the `configure-service` logic
 (same script, called per-service). Skip services that already have
 `@wellmade/eslint-config` installed *unless* the user asked for a
 re-run.
@@ -118,10 +118,10 @@ Hook installed: ~/.claude/hooks/lint-on-edit.sh
 
 ## Future: the wm CLI
 
-Most of `wire.mjs` is mechanical: detect, install, write, verify.
+Most of `setup.mjs` is mechanical: detect, install, write, verify.
 That's CLI work, not skill work. When `@wellmade/cli` ships,
-`wm wire` will own this logic, and this SKILL.md becomes a thin
-wrapper that says "run `wm wire`". The hook and AGENTS.md template
+`wm setup` will own this logic, and this SKILL.md becomes a thin
+wrapper that says "run `wm setup`". The hook and AGENTS.md template
 stay in atelier-ai (they're not CLI-shaped artifacts).
 
 For now: the script lives here so customers can use the workflow

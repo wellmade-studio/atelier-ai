@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// configure-project: detect the stack of the project in cwd and wire up
+// configure-service: detect the stack of the project in cwd and wire up
 // the @wellmade/* lint/format/TS configs end-to-end.
 //
 // Usage:
