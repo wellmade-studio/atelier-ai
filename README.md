@@ -61,6 +61,32 @@ pieces — each one earns its keep on its own.
 More to come. Each piece ships when there's a real need for it — not
 before.
 
+### Which skill do I want?
+
+| If you want to…                                                            | Use                  |
+| -------------------------------------------------------------------------- | -------------------- |
+| Set up Wellmade on a fresh clone (single repo or monorepo)                 | `wire-project`       |
+| Set up Wellmade on one service that doesn't have it yet                    | `configure-project`  |
+| Disable a Wellmade rule, flip a tsconfig flag, or skip a `@wellmade/*` pkg | `record-deviation`   |
+| See what deviations are tracked + find untracked drift                     | `audit-deviations`   |
+| Bump every `@wellmade/*` package to latest in lockstep                     | `update-wellmade`    |
+| Get inline lint/format on every file the agent edits                       | `hooks/lint-on-edit` |
+| Drop the Wellmade conventions into a project's `AGENTS.md`                 | `templates/AGENTS.md` (auto, via `wire-project`) |
+
+How they fit together:
+
+```
+wire-project ──────────→ configure-project (per service)
+                    └──→ AGENTS.md template
+                    └──→ lint-on-edit hook (optional)
+
+day-to-day:    record-deviation ←→ audit-deviations
+                                          ↑
+                                  update-wellmade
+                          (re-runs audit afterward to
+                           surface resolvable entries)
+```
+
 ### Wiring the hook (per agent)
 
 The hook script is portable; the *wiring* depends on which agent you

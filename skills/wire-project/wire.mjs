@@ -248,6 +248,21 @@ async function main() {
   }
 
   console.log('\nDone.');
+  printToolkitFooter();
+}
+
+// Surface the rest of the atelier-ai toolkit so the user knows what they
+// have available. Wiring is the first step; the day-to-day skills come
+// after.
+function printToolkitFooter() {
+  console.log('\n─── You also have these atelier-ai skills ─');
+  console.log('  • record-deviation   — when you need to disable a Wellmade rule, flip a tsconfig flag,');
+  console.log('                         or skip a @wellmade/* package. Each entry gets a why + revisit-when.');
+  console.log('  • audit-deviations   — periodic check on the register: tracked entries, untracked drift,');
+  console.log('                         overdue items, ESLint rule trajectories. CI-friendly with --ci.');
+  console.log('  • update-wellmade    — bump every @wellmade/* package in lockstep across the monorepo;');
+  console.log('                         re-runs audit-deviations so resolvable entries surface.');
+  console.log('───────────────────────────────────────────');
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

@@ -231,9 +231,10 @@ async function main() {
 
   console.log('\n✓ Updates installed.');
 
+  let auditExitCode = null;
   if (!SKIP_AUDIT) {
     console.log('\nRunning audit-deviations to check whether any tracked deviations are now resolvable…\n');
-    await runAudit();
+    auditExitCode = await runAudit();
   } else {
     console.log('\nSkipped audit (--skip-audit). Run `audit-deviations` manually to check for resolvable package deviations.');
   }
@@ -242,18 +243,29 @@ async function main() {
   console.log('  • Run typecheck + lint to catch any breakage from the new versions');
   console.log('  • Review .wellmade/deviations.md — package deviations may now be resolvable');
   console.log('  • git add -A && git commit -m "chore: bump @wellmade/* packages"');
+
+  // audit-deviations exits 0 when clean, 1 when drift or overdue items
+  // found. If it found something, point at record-deviation as the next move.
+  if (auditExitCode === 1) {
+    console.log('\n  The audit above flagged drift or overdue entries.');
+    console.log('  • For untracked drift: run `record-deviation <id> --why ... --revisit-when ...`');
+    console.log('  • For tracked entries now resolvable: run `record-deviation <id> --remove`');
+  }
 }
 
 async function runAudit() {
   if (!existsSync(AUDIT_SCRIPT)) {
     console.log('  (audit-deviations not installed — skipping)');
-    return;
+    return null;
   }
-  const result = spawnSync('node', [AUDIT_SCRIPT], { cwd, stdio: 'inherit' });
+  // Run audit with --ci so it returns a non-zero exit code on drift/overdue,
+  // even though we treat that as informational here (not a failure). This
+  // lets the caller decide whether to surface follow-up suggestions.
+  const result = spawnSync('node', [AUDIT_SCRIPT, '--ci'], { cwd, stdio: 'inherit' });
   if (result.status !== 0 && result.status !== 1) {
-    // 1 = drift found (informational here, not a failure)
     console.warn(`  audit-deviations exited ${result.status}`);
   }
+  return result.status;
 }
 
 async function ask(prompt) {

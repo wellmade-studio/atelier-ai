@@ -802,6 +802,34 @@ function printSummary(plan) {
   console.log('\nSuggested next steps:');
   console.log('  • git add -A && git commit -m "chore: wire @wellmade/* configs"');
   console.log('  • Set up editor integration (see standards-js README)');
+
+  // If anything notable happened that the user might want to track as a
+  // deviation, point at record-deviation. Brownfield projects almost always
+  // hit this — backed-up files mean "we chose to replace what was there"
+  // (possibly intentionally, possibly not), preserved scripts mean "we kept
+  // a custom version of something we'd normally standardize." Both are the
+  // exact shape of a deviation worth tracking.
+  const deviationCandidates = [];
+  if (events.backedUp.length > 0) {
+    deviationCandidates.push(
+      `${events.backedUp.length} file(s) backed up — if you'd intentionally diverged from Wellmade defaults there, record those as deviations`,
+    );
+  }
+  if (events.preservedScripts.length > 0) {
+    deviationCandidates.push(
+      `${events.preservedScripts.length} preserved script(s) — if any are deliberate customizations (not stale), record them so the audit doesn't flag them later`,
+    );
+  }
+  if (events.inlineOverwrites.length > 0) {
+    deviationCandidates.push(
+      `${events.inlineOverwrites.length} inline value(s) overwritten — if the previous value was a deliberate choice, record it before it's forgotten`,
+    );
+  }
+  if (deviationCandidates.length > 0) {
+    console.log('\n  Consider recording deviations for non-default choices:');
+    for (const c of deviationCandidates) console.log(`    • ${c}`);
+    console.log('    Use the `record-deviation` skill (each entry takes --why and --revisit-when).');
+  }
 }
 
 // Returns the list of notable signals for the skill owner. Empty list
