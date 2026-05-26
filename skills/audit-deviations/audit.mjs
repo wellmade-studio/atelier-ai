@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-// audit-relaxations: report on .wellmade/relaxations.md vs the current
-// state of the project's configs and code.
+// audit-deviations: report on .wellmade/deviations.md vs the current
+// state of the project's configs, packages, and code.
 
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { loadRegister, isLikelyOverdue } from '../_lib/relaxations-register.mjs';
-import { detectAllRelaxations } from '../_lib/baseline-diff.mjs';
+import { loadRegister, isLikelyOverdue } from '../_lib/deviations-register.mjs';
+import { detectAllDeviations } from '../_lib/baseline-diff.mjs';
 
 const argv = process.argv.slice(2);
 const CHECK_TRAJECTORIES = argv.includes('--check-trajectories');
@@ -17,9 +16,8 @@ const projectRoot = process.cwd();
 
 async function main() {
   const { exists, entries } = loadRegister(projectRoot);
-  const detected = await detectAllRelaxations(projectRoot);
+  const detected = await detectAllDeviations(projectRoot);
 
-  // Build the report.
   const report = {
     registerExists: exists,
     tracked: entries.map((e) => ({
@@ -57,10 +55,10 @@ async function main() {
 // ─── Reporting ─────────────────────────────────────────────────────────────
 
 function printReport(report) {
-  console.log('# Relaxation audit\n');
+  console.log('# Deviation audit\n');
   if (!report.registerExists) {
-    console.log('No `.wellmade/relaxations.md` found. The register hasn\'t been started yet.');
-    console.log('Use the `relax-rule` skill to record relaxations as they happen.\n');
+    console.log('No `.wellmade/deviations.md` found. The register hasn\'t been started yet.');
+    console.log('Use the `record-deviation` skill to record deviations as they happen.\n');
   } else {
     console.log(`## Tracked (${report.tracked.length})\n`);
     if (report.tracked.length === 0) {
@@ -79,15 +77,15 @@ function printReport(report) {
 
   console.log(`## Drift (${report.drift.length})\n`);
   if (report.drift.length === 0) {
-    console.log('  (no untracked relaxations)\n');
+    console.log('  (no untracked deviations)\n');
   } else {
-    console.log('Rules relaxed in your configs but not recorded in the register:');
+    console.log('Departures from Wellmade baselines that aren\'t recorded in the register:');
     for (const d of report.drift) {
-      console.log(`- **${d.source}/${d.id}**: baseline=${d.baseline}, relaxed-to=${d.relaxedTo}`);
+      console.log(`- **${d.source}/${d.id}**: baseline=${d.baseline}, actual=${d.actualValue}`);
     }
     console.log('');
-    console.log('Either record them with `relax-rule <id> --why ... --revisit-when ...`');
-    console.log('or restore the baseline in the corresponding config file.\n');
+    console.log('Either record them with `record-deviation <id> --why ... --revisit-when ...`');
+    console.log('or restore the baseline in the corresponding config file / install the missing package.\n');
   }
 
   if (report.overdue.length > 0) {
@@ -124,9 +122,10 @@ function decideExitCode(report) {
 function computeDrift(entries, detected) {
   const tracked = new Set(entries.map((e) => `${e.source}/${e.id}`));
   const allDetected = [
-    ...detected.eslint.relaxations,
-    ...detected.tsconfig.relaxations,
-    ...detected.prettier.relaxations,
+    ...detected.eslint.deviations,
+    ...detected.tsconfig.deviations,
+    ...detected.prettier.deviations,
+    ...detected.package.deviations,
   ];
   return allDetected.filter((d) => !tracked.has(`${d.source}/${d.id}`));
 }
@@ -134,8 +133,6 @@ function computeDrift(entries, detected) {
 // ─── Trajectories ──────────────────────────────────────────────────────────
 
 function countEslintViolations(cwd, ruleId) {
-  // Re-enable the rule temporarily by passing `--rule '<id>: error'`
-  // and counting messages of that rule in the JSON output.
   try {
     const out = execSync(
       `npx --no-install eslint --no-error-on-unmatched-pattern --format json --rule ${JSON.stringify(ruleId + ': error')} .`,
@@ -150,7 +147,6 @@ function countEslintViolations(cwd, ruleId) {
     }
     return count;
   } catch (err) {
-    // ESLint exits non-zero when there are errors; stdout still has JSON.
     try {
       const results = JSON.parse(String(err.stdout || ''));
       let count = 0;

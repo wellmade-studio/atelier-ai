@@ -55,27 +55,50 @@ apply — use the native versions but be aware of their quirks.
 - **No mocked databases in integration tests.** Mock-passing prod-failing
   tests are worse than no tests.
 
-## Relaxing a Wellmade rule
+## Deviating from a Wellmade baseline
 
 Sometimes a Wellmade lint, TypeScript, or Prettier rule isn't
-sustainable on this project *right now* (typical on brownfield
-adoption). That's allowed — but a silent disable becomes a permanent
-regression nobody remembers to fix.
+sustainable on this project *right now*. Sometimes a `@wellmade/*`
+package can't be installed (peer-dep mismatch, project-specific
+choice). Both happen on brownfield adoption — that's allowed. But a
+silent deviation becomes a permanent regression nobody remembers to fix.
 
 **Don't edit `eslint.config.js` / `tsconfig.json` directly to disable a
-Wellmade rule.** Use the [`relax-rule`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/relax-rule)
-skill instead. It records the relaxation in `.wellmade/relaxations.md`
+Wellmade rule, and don't silently skip a `@wellmade/*` package.** Use
+the [`record-deviation`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/record-deviation)
+skill instead. It records the deviation in `.wellmade/deviations.md`
 with a `why` and a `revisit-when`, so the debt is tracked and revisitable.
 
 ```bash
-# Example: disable no-explicit-any with a documented reason
-relax-rule no-explicit-any \
+# Disable an ESLint rule with a documented reason
+record-deviation no-explicit-any \
   --why "143 usages in services/api need Mongoose typing first" \
   --revisit-when "after migration to @wellmade/bedrock parsers"
+
+# Skip a @wellmade/* package
+record-deviation @wellmade/lint-staged-config \
+  --why "peer-dep mismatch with lint-staged@16; inline config works fine" \
+  --revisit-when "after standards-js v0.2.0 widens the peer-dep range"
+
+# Flip a tsconfig strictness flag
+record-deviation tsconfig.verbatimModuleSyntax \
+  --why "Nest CJS scaffold; ESM migration scheduled" \
+  --revisit-when "2026-Q3"
 ```
 
 For inline single-line disables (`// eslint-disable-next-line foo`),
 no register entry is needed — those don't shift the baseline.
+
+Run [`audit-deviations`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/audit-deviations)
+periodically (e.g. quarterly) to see whether any entries can now be
+removed, or whether the project has drifted (deviations in the configs
+that aren't in the register).
+
+After a `standards-js` release widens a peer-dep range, run
+[`update-wellmade`](https://github.com/wellmade-studio/atelier-ai/tree/main/skills/update-wellmade)
+to bump all `@wellmade/*` packages across the monorepo in lockstep —
+it also re-runs the audit afterward to surface package deviations
+that may now be resolvable.
 
 ## Commits and PRs
 

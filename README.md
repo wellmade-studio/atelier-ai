@@ -32,15 +32,23 @@ pieces — each one earns its keep on its own.
   Vite-React, Next.js, plain Node/TS) and wires the `@wellmade/*`
   configs end-to-end. Called by `wire-project` per service; can also
   be used standalone.
-- **[`skills/relax-rule`](./skills/relax-rule)** — record a deliberate
-  relaxation of a Wellmade rule in `.wellmade/relaxations.md`. Stops
-  brownfield adoption from accumulating invisible tech debt: every
-  relaxation gets a `why` and a `revisit-when`. Always reports register
-  state on every run.
-- **[`skills/audit-relaxations`](./skills/audit-relaxations)** —
-  periodic check on the register. Detects drift (rules relaxed in
-  configs but not tracked), flags overdue entries, optionally re-runs
-  each rule to compute violation-count trajectories. CI-friendly.
+- **[`skills/record-deviation`](./skills/record-deviation)** — record a
+  deliberate departure from a Wellmade baseline in
+  `.wellmade/deviations.md`. Covers disabled rules, flipped tsconfig
+  flags, replaced Prettier configs, *and* skipped `@wellmade/*` packages.
+  Stops brownfield adoption from accumulating invisible tech debt:
+  every deviation gets a `why` and a `revisit-when`. Always reports
+  register state on every run.
+- **[`skills/audit-deviations`](./skills/audit-deviations)** — periodic
+  check on the register. Detects drift across all four sources (eslint,
+  tsconfig, prettier, package), flags overdue entries, optionally
+  re-runs each ESLint rule to compute violation-count trajectories.
+  CI-friendly with `--ci`.
+- **[`skills/update-wellmade`](./skills/update-wellmade)** — bump every
+  `@wellmade/*` package across a project (or monorepo) to the latest
+  versions in lockstep. Pairs with `audit-deviations`: a `standards-js`
+  release that widens a peer-dep range may now allow a previously-skipped
+  package to be installed. Run periodically.
 - **[`templates/AGENTS.md`](./templates/AGENTS.md)** — the Wellmade
   conventions in a portable file. Wrapped in marker comments so
   `atelier-ai` can update it in place without clobbering project-specific

@@ -1,17 +1,21 @@
-// Read/write the .wellmade/relaxations.md register.
+// Read/write the .wellmade/deviations.md register.
 //
-// Format: a markdown file with one section per relaxation. Each section
-// has YAML front-matter for structured fields and a free-text body for
-// the "why". Designed to be both human-readable and machine-parseable.
+// A "deviation" is any deliberate departure from a @wellmade/* baseline:
+// a disabled ESLint rule, a flipped tsconfig flag, a Prettier override,
+// or a @wellmade/* package the project chose to skip or replace.
+//
+// Format: markdown with one section per deviation. Structured fields
+// (parseable, machine-readable) above a free-text "why". Both
+// human-readable and machine-parseable.
 //
 // Example entry:
 //
 //   ## no-explicit-any
 //
 //   - **source**: eslint
-//   - **relaxed-to**: off
+//   - **actual-value**: off
 //   - **baseline**: error
-//   - **created**: 2026-05-22
+//   - **created**: 2026-05-26
 //   - **revisit-when**: after migration to @wellmade/bedrock parsers
 //   - **initial-count**: 143
 //
@@ -19,23 +23,30 @@
 //   spread across services/api. Re-enabling means typing the Mongoose
 //   document shapes first; tracked in INGEST-412.
 //
-// The skill (relax-rule) appends entries; audit-relaxations parses them
-// to compute trajectories. Both go through this module so the format
-// stays consistent.
+// Sources:
+//   eslint    — a baseline rule lowered (error → warn/off)
+//   tsconfig  — a strict compilerOption flipped (true → false)
+//   prettier  — package.json#prettier set to something non-@wellmade
+//   stylelint — a baseline rule lowered
+//   package   — a @wellmade/* package the project chose to skip or replace
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-export const REGISTER_RELATIVE_PATH = '.wellmade/relaxations.md';
+export const REGISTER_RELATIVE_PATH = '.wellmade/deviations.md';
 
-const HEADER = `# Wellmade relaxations
+const HEADER = `# Wellmade deviations
 
-This file tracks deliberate overrides of the Wellmade toolchain
-baselines. Each entry exists because someone decided that strict
-compliance wasn't sustainable *right now* — not because the rule was
-wrong. Each entry should be revisited.
+This file tracks deliberate departures from the Wellmade toolchain
+baselines. A deviation might be a disabled lint rule, a flipped
+tsconfig strictness flag, a replaced Prettier config, or a
+\`@wellmade/*\` package the project chose to skip or substitute.
 
-Managed by the \`relax-rule\` and \`audit-relaxations\` skills from
+Each entry exists because someone decided that strict compliance
+wasn't sustainable *right now* — not because the baseline was wrong.
+Each entry should be revisited.
+
+Managed by the \`record-deviation\` and \`audit-deviations\` skills from
 [atelier-ai](https://github.com/wellmade-studio/atelier-ai). You can
 edit entries by hand, but the machine-readable fields below the entry
 heading must stay in the documented format or the audit skill will
@@ -44,14 +55,14 @@ miss them.
 `;
 
 /**
- * @typedef {Object} Relaxation
- * @property {string} id              kebab-case identifier (e.g. "no-explicit-any", "tsconfig.verbatimModuleSyntax")
- * @property {string} source          "eslint" | "tsconfig" | "prettier" | "stylelint"
- * @property {string} relaxedTo       new value (e.g. "off", "false")
- * @property {string} baseline        Wellmade baseline value (e.g. "error", "true")
+ * @typedef {Object} Deviation
+ * @property {string} id              kebab-case identifier (e.g. "no-explicit-any", "tsconfig.verbatimModuleSyntax", "@wellmade/lint-staged-config")
+ * @property {string} source          "eslint" | "tsconfig" | "prettier" | "stylelint" | "package"
+ * @property {string} actualValue     what the project does instead (e.g. "off", "false", "skipped", "lint-staged@16 inline config")
+ * @property {string} baseline        Wellmade baseline (e.g. "error", "true", "installed")
  * @property {string} created         YYYY-MM-DD
  * @property {string} revisitWhen     free-text condition or date
- * @property {number=} initialCount   error count at adoption, if measurable
+ * @property {number=} initialCount   error count at adoption (for rule deviations only)
  * @property {string} why             free-text justification
  */
 
@@ -94,7 +105,7 @@ export function removeEntry(projectRoot, id, source) {
 function entryToMarkdown(entry) {
   const fields = [
     `- **source**: ${entry.source}`,
-    `- **relaxed-to**: ${formatValue(entry.relaxedTo)}`,
+    `- **actual-value**: ${formatValue(entry.actualValue)}`,
     `- **baseline**: ${formatValue(entry.baseline)}`,
     `- **created**: ${entry.created}`,
     `- **revisit-when**: ${entry.revisitWhen}`,
@@ -130,7 +141,7 @@ function parseRegister(raw) {
       current = {
         id: h[1].trim(),
         source: '',
-        relaxedTo: '',
+        actualValue: '',
         baseline: '',
         created: '',
         revisitWhen: '',
@@ -148,7 +159,7 @@ function parseRegister(raw) {
       const [, key, value] = f;
       switch (key) {
         case 'source': current.source = value; break;
-        case 'relaxed-to': current.relaxedTo = value; break;
+        case 'actual-value': current.actualValue = value; break;
         case 'baseline': current.baseline = value; break;
         case 'created': current.created = value; break;
         case 'revisit-when': current.revisitWhen = value; break;
@@ -171,13 +182,13 @@ function parseRegister(raw) {
 // ─── Reporting helpers ─────────────────────────────────────────────────────
 
 export function summarize(entries) {
-  if (entries.length === 0) return 'No relaxations tracked.';
+  if (entries.length === 0) return 'No deviations tracked.';
   const bySource = entries.reduce((acc, e) => {
     acc[e.source] = (acc[e.source] ?? 0) + 1;
     return acc;
   }, {});
   const parts = Object.entries(bySource).map(([s, n]) => `${n} ${s}`);
-  return `${entries.length} relaxation(s) tracked: ${parts.join(', ')}.`;
+  return `${entries.length} deviation(s) tracked: ${parts.join(', ')}.`;
 }
 
 export function isLikelyOverdue(entry) {
