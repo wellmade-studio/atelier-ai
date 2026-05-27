@@ -1,0 +1,31 @@
+name: Commitlint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # wagoid/commitlint-github-action bundles commitlint and reads
+      # commitlint.config.js from the repo root. It also auto-detects
+      # the right `--from`/`--to` for push, PR, and workflow_dispatch
+      # events so we don't have to hand-roll the SHAs ourselves.
+      # Atelier-ai has no package.json so npm-side dev-deps aren't an
+      # option; the action's bundled commitlint + on-demand install of
+      # @wellmade/commitlint-config from npm is the right fit.
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.js
+          failOnWarnings: false
