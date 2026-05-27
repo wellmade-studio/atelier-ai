@@ -19,13 +19,14 @@ jobs:
           fetch-depth: 0
 
       # wagoid/commitlint-github-action bundles commitlint and reads
-      # commitlint.config.js from the repo root. It also auto-detects
-      # the right `--from`/`--to` for push, PR, and workflow_dispatch
-      # events so we don't have to hand-roll the SHAs ourselves.
-      # Atelier-ai has no package.json so npm-side dev-deps aren't an
-      # option; the action's bundled commitlint + on-demand install of
-      # @wellmade/commitlint-config from npm is the right fit.
+      # commitlint.config.mjs from the repo root. The .mjs extension
+      # is required by the action (v6 rejects .js because atelier-ai
+      # has no package.json#type to disambiguate). It also auto-
+      # detects --from/--to per event type so we don't have to roll
+      # the SHAs by hand. Bundled commitlint + on-demand install of
+      # @wellmade/commitlint-config from npm fits this repo (no
+      # package.json, no npm-side dev-deps to lean on).
       - uses: wagoid/commitlint-github-action@v6
         with:
-          configFile: commitlint.config.js
+          configFile: commitlint.config.mjs
           failOnWarnings: false
