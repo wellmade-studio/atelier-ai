@@ -199,14 +199,22 @@ function planFor(stack) {
       break;
     case 'monorepo-root':
       plan.install = [
+        '@wellmade/eslint-config',
         '@wellmade/prettier-config',
         '@wellmade/tsconfig',
         '@wellmade/commitlint-config',
       ];
       plan.tsconfigVariant = 'base.json';
-      plan.writeEslintConfig = false;
+      // Keep plan.presets at the default `[basePreset]` — a minimal
+      // root-level eslint.config.js that just registers basePreset.
+      // Sub-packages still need their own configs for framework-
+      // specific layers; the root file exists so ad-hoc IDE lint runs
+      // (`eslint <file-at-root>`) find *some* config rather than
+      // erroring with "no config found". This was a real adoption-
+      // friction point in the first field report (#F6).
+      plan.writeEslintConfig = true;
       plan.notes.push(
-        'Monorepo root: writing prettier + tsconfig base only. Re-run this skill inside each workspace package for framework-specific configs.',
+        'Monorepo root: writing minimal eslint.config.js (basePreset only) + prettier + tsconfig base + commitlint. IDE-driven ad-hoc lint at the root finds this config; sub-packages still need their own framework-specific eslint.config.js — re-run this skill inside each one.',
       );
       break;
     default:

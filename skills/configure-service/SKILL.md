@@ -94,10 +94,15 @@ Read `package.json` from the working directory. Detection order matters:
   wins — order matters.
 - **Next.js + Tailwind** is just `nextjs`; add `tailwind` to the styling
   axis, not the stack.
-- **Monorepo root**: do not write framework configs at the root. Set up
-  shared `prettier`, `tsconfig` *base*, and `commitlint` at the root,
-  then stop. Tell the user to re-run the skill inside each workspace
-  package for framework-specific configs.
+- **Monorepo root**: do not write framework configs at the root, but
+  *do* write a **minimal `eslint.config.js` that registers only
+  `basePreset`** plus shared `prettier`, `tsconfig` *base*, and
+  `commitlint`. The minimal root eslint config exists so IDE-driven
+  ad-hoc lint runs at the root (e.g. clicking a root file from
+  VSCode's lint panel) find *some* config rather than erroring with
+  "no eslint config found". Sub-packages still need their own
+  framework-specific eslint configs; tell the user to re-run the
+  skill inside each one.
 
 ### Step 2 — Confirm with the user before mutating anything
 
@@ -155,7 +160,7 @@ the project may be intentionally on another PM.
 | `astro`          | `@wellmade/stylelint-config`                          |
 | `node-api`       | (none)                                                |
 | `plain-ts` / `plain-js` | (none)                                         |
-| `monorepo-root`  | `@wellmade/prettier-config`, `@wellmade/tsconfig`, `@wellmade/commitlint-config` only |
+| `monorepo-root`  | `@wellmade/eslint-config` (for the minimal root eslint.config.js), `@wellmade/prettier-config`, `@wellmade/tsconfig`, `@wellmade/commitlint-config` |
 
 **Optional (ask first):**
 
